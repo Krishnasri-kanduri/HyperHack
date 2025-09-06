@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduTrack - Student Dropout Analysis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --danger: #e63946;
+            --warning: #fca311;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fb;
+            color: #333;
+        }
+        
+        .auth-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .navbar {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            border: none;
+            transition: transform 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+            font-weight: 600;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .stat-title {
+            font-size: 1rem;
+            color: #6c757d;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary);
+        }
+        
+        .login-logo {
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+        
+        .login-logo i {
+            font-size: 3rem;
+        }
+        
+        .sidebar {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            height: calc(100vh - 100px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 20px;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .sidebar-menu li {
+            margin-bottom: 10px;
+        }
+        
+        .sidebar-menu a {
+            display: block;
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: #495057;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .sidebar-menu i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            min-height: 600px;
+        }
+        
+        .filter-bar {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .table-responsive {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .table th {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .reason-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .financial {
+            background-color: #ffdddd;
+            color: #d00000;
+        }
+        
+        .academic {
+            background-color: #fff4dd;
+            color: #ff9500;
+        }
+        
+        .personal {
+            background-color: #ddffdd;
+            color: #007a00;
+        }
+        
+        .other {
+            background-color: #eeeeff;
+            color: #0000cc;
+        }
+        
+        .content-pane {
+            display: none;
+        }
+        
+        .content-pane.active {
+            display: block;
+        }
+        
+        .program-card {
+            border-left: 4px solid var(--primary);
+        }
+        
+        .program-card.cs {
+            border-left-color: #4361ee;
+        }
+        
+        .program-card.business {
+            border-left-color: #f72585;
+        }
+        
+        .program-card.engineering {
+            border-left-color: #fca311;
+        }
+        
+        .program-card.arts {
+            border-left-color: #7209b7;
+        }
+        
+        .settings-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .settings-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Authentication Screen -->
+    <div id="auth-screen" class="auth-container">
+        <div class="login-logo">
+            <i class="fas fa-graduation-cap"></i>
+            <h2>EduTrack Login</h2>
+        </div>
+        <form id="login-form">
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" class="form-control" id="username" placeholder="Enter your username" required>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" placeholder="Enter your password" required>
+            </div>
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="remember">
+                <label class="form-check-label" for="remember">Remember me</label>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Login</button>
+        </form>
+        <div class="mt-3 text-center">
+            <a href="#" id="forgot-password">Forgot password?</a>
+        </div>
+    </div>
+
+    <!-- Dashboard Screen (initially hidden) -->
+    <div id="dashboard-screen" style="display: none;">
+        <div class="dashboard-container">
+            <div class="navbar d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="text-white mb-0"><i class="fas fa-graduation-cap me-2"></i>EduTrack</h3>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="text-white me-3">Welcome, Admin</div>
+                    <button class="btn btn-light btn-sm" id="logout-btn"><i class="fas fa-sign-out-alt me-1"></i>Logout</button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="sidebar">
+                        <ul class="sidebar-menu">
+                            <li><a href="#" class="nav-link active" data-pane="dashboard"><i class="fas fa-home"></i> Dashboard</a></li>
+                            <li><a href="#" class="nav-link" data-pane="analytics"><i class="fas fa-chart-line"></i> Analytics</a></li>
+                            <li><a href="#" class="nav-link" data-pane="students"><i class="fas fa-user-graduate"></i> Students</a></li>
+                            <li><a href="#" class="nav-link" data-pane="courses"><i class="fas fa-book"></i> Courses</a></li>
+                            <li><a href="#" class="nav-link" data-pane="reports"><i class="fas fa-chart-pie"></i> Reports</a></li>
+                            <li><a href="#" class="nav-link" data-pane="settings"><i class="fas fa-cog"></i> Settings</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="main-content">
+                        <!-- Dashboard Pane -->
+                        <div id="dashboard-pane" class="content-pane active">
+                            <h4 class="mb-4">Student Dropout Analysis Dashboard</h4>
+                            
+                            <div class="filter-bar mb-4">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <select class="form-select" id="year-filter">
+                                            <option selected>All Years</option>
+                                            <option>2023</option>
+                                            <option>2022</option>
+                                            <option>2021</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select class="form-select" id="program-filter">
+                                            <option selected>All Programs</option>
+                                            <option>Computer Science</option>
+                                            <option>Business</option>
+                                            <option>Engineering</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select class="form-select" id="semester-filter">
+                                            <option selected>All Semesters</option>
+                                            <option>Fall</option>
+                                            <option>Spring</option>
+                                            <option>Summer</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button class="btn btn-primary w-100"><i class="fas fa-filter me-1"></i> Apply Filters</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-4">
+                                <div class="col-md-3">
+                                    <div class="card stat-card">
+                                        <div class="stat-number">14.2%</div>
+                                        <div class="stat-title">Overall Dropout Rate</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card stat-card">
+                                        <div class="stat-number">327</div>
+                                        <div class="stat-title">Total Dropouts</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card stat-card">
+                                        <div class="stat-number">22.5%</div>
+                                        <div class="stat-title">Male Dropout Rate</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card stat-card">
+                                        <div class="stat-number">9.8%</div>
+                                        <div class="stat-title">Female Dropout Rate</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-header">Dropout Reasons Distribution</div>
+                                        <div class="card-body">
+                                            <div class="chart-container">
+                                                <canvas id="reasonsChart"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-header">Dropout Trend Over Time</div>
+                                        <div class="card-body">
+                                            <div class="chart-container">
+                                                <canvas id="trendChart"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span>Recent Dropout Cases</span>
+                                    <button class="btn btn-sm btn-primary"><i class="fas fa-download me-1"></i> Generate Report</button>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Student ID</th>
+                                                    <th>Name</th>
+                                                    <th>Program</th>
+                                                    <th>Semester</th>
+                                                    <th>Primary Reason</th>
+                                                    <th>Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>S10245</td>
+                                                    <td>John Smith</td>
+                                                    <td>Computer Science</td>
+                                                    <td>Fall 2023</td>
+                                                    <td><span class="reason-badge financial">Financial</span></td>
+                                                    <td>10/15/2023</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>S10287</td>
+                                                    <td>Maria Garcia</td>
+                                                    <td>Business</td>
+                                                    <td>Fall 2023</td>
+                                                    <td><span class="reason-badge academic">Academic</span></td>
+                                                    <td>10/12/2023</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>S10312</td>
+                                                    <td>David Kim</td>
+                                                    <td>Engineering</td>
+                                                    <td>Fall 2023</td>
+                                                    <td><span class="reason-badge personal">Personal</span></td>
+                                                    <td>10/10/2023</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>S10345</td>
+                                                    <td>Sarah Johnson</td>
+                                                    <td>Computer Science</td>
+                                                    <td>Fall 2023</td>
+                                                    <td><span class="reason-badge financial">Financial</span></td>
+                                                    <td>10/05/2023</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>S10378</td>
+                                                    <td>Robert Brown</td>
+                                                    <td>Engineering</td>
+                                                    <td>Fall 2023</td>
+                                                    <td><span class="reason-badge other">Other</span></td>
+                                                    <td>10/01/2023</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Analytics Pane -->
+                        <div id="analytics-pane" class="content-pane">
+                            <h4 class="mb-4">Advanced Analytics</h4>
+                            
+                            <div class="row mb-4">
+                                <div class="col-md-8">
+                                    <div class="card">
+                                        <div class="card-header">Dropout Rate by Program</div>
+                                        <div class="card-body">
+                                            <div class="chart-container">
+                                                <canvas id="programChart"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <div class="card-header">At-Risk Students</div>
+                                        <div class="card-body">
+                                            <h5 class="text-center">124 Students</h5>
+                                            <p class="text-muted text-center">Identified as potential dropouts</p>
+                                            <div class="progress mb-2">
+                                                <div class="progress-bar bg-danger" role="progressbar" style="width: 65%" aria-valuenow="65" aria-valuemin="0" aria-valuemax="100">High Risk: 65%</div>
+                                            </div>
+                                            <div class="progress mb-2">
+                                                <div class="progress-bar bg-warning" role="progressbar" style="width: 35%" aria-valuenow="35" aria-valuemin="0" aria-valuemax="100">Medium Risk: 35%</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card mb-4">
+                                <div class="card-header">Predictive Analysis</div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h5>Key Factors Influencing Dropout</h5>
+                                            <ul class="list-group">
+                                                <li class="list-group-item">1. Low GPA (< 2.0)</li>
+                                                <li class="list-group-item">2. Financial difficulties</li>
+                                                <li class="list-group-item">3. Attendance below 70%</li>
+                                                <li class="list-group-item">4. Failed core courses</li>
+                                                <li class="list-group-item">5. Lack of engagement</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h5>Intervention Effectiveness</h5>
+                                            <div class="chart-container">
+                                                <canvas id="interventionChart"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Students Pane -->
+                        <!-- Students Pane -->
+<div id="students-pane" class="content-pane">
+  <h4 class="mb-4">Student Management</h4>
+
+  <div class="d-flex justify-content-between mb-4">
+    <div class="d-flex">
+      <input type="text" id="studentSearch" class="form-control me-2" placeholder="Search students...">
+      <button class="btn btn-primary" onclick="searchStudents()"><i class="fas fa-search"></i></button>
+    </div>
+    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#studentModal">
+      <i class="fas fa-plus me-1"></i> Add New Student
+    </button>
+  </div>
+
+  <!-- Summary cards -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card program-card cs">
+        <div class="card-body">
+          <h5>Computer Science</h5>
+          <h3 class="stat-number" id="cs-count">0</h3>
+          <p class="stat-title">Dropouts</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card program-card business">
+        <div class="card-body">
+          <h5>Business</h5>
+          <h3 class="stat-number" id="business-count">0</h3>
+          <p class="stat-title">Dropouts</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card program-card engineering">
+        <div class="card-body">
+          <h5>Engineering</h5>
+          <h3 class="stat-number" id="eng-count">0</h3>
+          <p class="stat-title">Dropouts</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card program-card arts">
+        <div class="card-body">
+          <h5>Arts & Humanities</h5>
+          <h3 class="stat-number" id="arts-count">0</h3>
+          <p class="stat-title">Dropouts</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Student Table -->
+  <div class="card">
+    <div class="card-header">Student List</div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover" id="studentTable">
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>Name</th>
+              <th>Program</th>
+              <th>Status</th>
+              <th>GPA</th>
+              <th>Risk Level</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="studentTableBody">
+            <!-- rows will be injected dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Student Modal -->
+<div class="modal fade" id="studentModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add / Edit Student</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="studentForm">
+          <input type="hidden" id="editIndex">
+          <div class="mb-3">
+            <label class="form-label">Student ID</label>
+            <input type="text" class="form-control" id="studentId" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" id="studentName" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Program</label>
+            <select class="form-select" id="studentProgram">
+              <option>Computer Science</option>
+              <option>Business</option>
+              <option>Engineering</option>
+              <option>Arts & Humanities</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Status</label>
+            <select class="form-select" id="studentStatus">
+              <option>Active</option>
+              <option>At Risk</option>
+              <option>Inactive</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">GPA</label>
+            <input type="number" step="0.01" class="form-control" id="studentGPA" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Risk Level</label>
+            <select class="form-select" id="studentRisk">
+              <option>Low</option>
+              <option>Medium</option>
+              <option>High</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" onclick="saveStudent()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let students = [
+    {id:"S10456", name:"Emily Wilson", program:"Computer Science", status:"Active", gpa:3.45, risk:"Low"},
+    {id:"S10472", name:"James Taylor", program:"Business", status:"At Risk", gpa:1.85, risk:"High"},
+    {id:"S10489", name:"Sophia Martinez", program:"Engineering", status:"Active", gpa:3.22, risk:"Low"},
+    {id:"S10512", name:"Michael Chen", program:"Arts & Humanities", status:"Inactive", gpa:2.15, risk:"Medium"}
+  ];
+
+  function renderStudents() {
+    const tbody = document.getElementById("studentTableBody");
+    tbody.innerHTML = "";
+    students.forEach((s, index) => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${s.id}</td>
+          <td>${s.name}</td>
+          <td>${s.program}</td>
+          <td><span class="badge ${s.status==="Active"?"bg-success":s.status==="At Risk"?"bg-warning":"bg-secondary"}">${s.status}</span></td>
+          <td>${s.gpa}</td>
+          <td><span class="badge ${s.risk==="Low"?"bg-success":s.risk==="Medium"?"bg-warning":"bg-danger"}">${s.risk}</span></td>
+          <td>
+            <button class="btn btn-sm btn-outline-warning" onclick="editStudent(${index})"><i class="fas fa-edit"></i></button>
+          </td>
+        </tr>
+      `;
+    });
+  }
+
+  function saveStudent() {
+    const id = document.getElementById("studentId").value;
+    const name = document.getElementById("studentName").value;
+    const program = document.getElementById("studentProgram").value;
+    const status = document.getElementById("studentStatus").value;
+    const gpa = parseFloat(document.getElementById("studentGPA").value);
+    const risk = document.getElementById("studentRisk").value;
+    const editIndex = document.getElementById("editIndex").value;
+
+    if(editIndex === "") {
+      students.push({id, name, program, status, gpa, risk});
+    } else {
+      students[editIndex] = {id, name, program, status, gpa, risk};
+    }
+
+    document.getElementById("studentForm").reset();
+    document.getElementById("editIndex").value = "";
+    renderStudents();
+    bootstrap.Modal.getInstance(document.getElementById("studentModal")).hide();
+  }
+
+  function editStudent(index) {
+    const s = students[index];
+    document.getElementById("studentId").value = s.id;
+    document.getElementById("studentName").value = s.name;
+    document.getElementById("studentProgram").value = s.program;
+    document.getElementById("studentStatus").value = s.status;
+    document.getElementById("studentGPA").value = s.gpa;
+    document.getElementById("studentRisk").value = s.risk;
+    document.getElementById("editIndex").value = index;
+    new bootstrap.Modal(document.getElementById("studentModal")).show();
+  }
+
+  function searchStudents() {
+    const term = document.getElementById("studentSearch").value.toLowerCase();
+    const filtered = students.filter(s => s.name.toLowerCase().includes(term) || s.id.toLowerCase().includes(term));
+    const tbody = document.getElementById("studentTableBody");
+    tbody.innerHTML = "";
+    filtered.forEach((s, index) => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${s.id}</td>
+          <td>${s.name}</td>
+          <td>${s.program}</td>
+          <td><span class="badge ${s.status==="Active"?"bg-success":s.status==="At Risk"?"bg-warning":"bg-secondary"}">${s.status}</span></td>
+          <td>${s.gpa}</td>
+          <td><span class="badge ${s.risk==="Low"?"bg-success":s.risk==="Medium"?"bg-warning":"bg-danger"}">${s.risk}</span></td>
+          <td>
+            <button class="btn btn-sm btn-outline-warning" onclick="editStudent(${index})"><i class="fas fa-edit"></i></button>
+          </td>
+        </tr>
+      `;
+    });
+  }
+
+  // Initial render
+  renderStudents();
+</script>
+
+<!-- Courses Pane -->
+<!-- Courses Pane -->
+<div id="courses-pane" class="content-pane">
+  <h4 class="mb-4">Course Management</h4>
+
+  <div class="d-flex justify-content-between mb-4">
+    <div class="d-flex">
+      <input type="text" class="form-control me-2" placeholder="Search courses...">
+      <button class="btn btn-primary"><i class="fas fa-search"></i></button>
+    </div>
+    <button class="btn btn-success"><i class="fas fa-plus me-1"></i> Add New Course</button>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card program-card cs">
+        <div class="card-body">
+          <h5>Computer Science</h5>
+          <h3 class="stat-number">24</h3>
+          <p class="stat-title">Courses</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card program-card business">
+        <div class="card-body">
+          <h5>Business</h5>
+          <h3 class="stat-number">18</h3>
+          <p class="stat-title">Courses</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card program-card engineering">
+        <div class="card-body">
+          <h5>Engineering</h5>
+          <h3 class="stat-number">20</h3>
+          <p class="stat-title">Courses</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card program-card arts">
+        <div class="card-body">
+          <h5>Arts & Humanities</h5>
+          <h3 class="stat-number">12</h3>
+          <p class="stat-title">Courses</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">Course List</div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Course Code</th>
+              <th>Course Title</th>
+              <th>Program</th>
+              <th>Credits</th>
+              <th>Semester</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>CS101</td>
+              <td>Introduction to Programming</td>
+              <td>Computer Science</td>
+              <td>3</td>
+              <td>Fall</td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
+                <button class="btn btn-sm btn-outline-warning"><i class="fas fa-edit"></i></button>
+              </td>
+            </tr>
+            <tr>
+              <td>BUS201</td>
+              <td>Principles of Management</td>
+              <td>Business</td>
+              <td>4</td>
+              <td>Spring</td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
+                <button class="btn btn-sm btn-outline-warning"><i class="fas fa-edit"></i></button>
+              </td>
+            </tr>
+            <tr>
+              <td>ENG301</td>
+              <td>Structural Mechanics</td>
+              <td>Engineering</td>
+              <td>3</td>
+              <td>Fall</td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
+                <button class="btn btn-sm btn-outline-warning"><i class="fas fa-edit"></i></button>
+              </td>
+            </tr>
+            <tr>
+              <td>ART210</td>
+              <td>History of Modern Art</td>
+              <td>Arts & Humanities</td>
+              <td>2</td>
+              <td>Summer</td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
+                <button class="btn btn-sm btn-outline-warning"><i class="fas fa-edit"></i></button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+                            
+                            <div class="card">
+                                <div class="card-header">Student List</div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Student ID</th>
+                                                    <th>Name</th>
+                                                    <th>Program</th>
+                                                    <th>Status</th>
+                                                    <th>GPA</th>
+                                                    <th>Risk Level</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>S10456</td>
+                                                    <td>Emily Wilson</td>
+                                                    <td>Computer Science</td>
+                                                    <td><span class="badge bg-success">Active</span></td>
+                                                    <td>3.45</td>
+                                                    <td><span class="badge bg-success">Low</span></td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
+                                                        <button class="btn btn-sm btn-outline-warning"><i class="fas fa-edit"></i></button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>S10472</td>
+                                                    <td>James Taylor</td>
+                                                    <td>Business</td>
+                                                    <td><span class="badge bg-warning">At Risk</span></td>
+                                                    <td>1.85</td>
+                                                    <td><span class="badge bg-danger">High</span></td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
+                                                        <button class="btn btn-sm btn-outline-warning"><i class="fas fa-edit"></i></button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>S10489</td>
+                                                    <td>Sophia Martinez</td>
+                                                    <td>Engineering</td>
+                                                    <td><span class="badge bg-success">Active</span></td>
+                                                    <td>3.22</td>
+                                                    <td><span class="badge bg-success">Low</span></td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
+                                                        <button class="btn btn-sm btn-outline-warning"><i class="fas fa-edit"></i></button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>S10512</td>
+                                                    <td>Michael Chen</td>
+                                                    <td>Arts & Humanities</td>
+                                                    <td><span class="badge bg-secondary">Inactive</span></td>
+                                                    <td>2.15</td>
+                                                    <td><span class="badge bg-warning">Medium</span></td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></button>
+                                                        <button class="btn btn-sm btn-outline-warning"><i class="fas fa-edit"></i></button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Reports Pane -->
+                        <div id="reports-pane" class="content-pane">
+                            <h4 class="mb-4">Report Generation</h4>
+                            
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-file-pdf fa-3x text-danger mb-3"></i>
+                                            <h5>Annual Dropout Report</h5>
+                                            <p class="text-muted">Comprehensive analysis of dropout trends</p>
+                                            <button class="btn btn-outline-danger"><i class="fas fa-download me-1"></i> Generate PDF</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-file-excel fa-3x text-success mb-3"></i>
+                                            <h5>Data Export</h5>
+                                            <p class="text-muted">Export student data for further analysis</p>
+                                            <button class="btn btn-outline-success"><i class="fas fa-download me-1"></i> Export CSV</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <div class="card-body text-center">
+                                            <i class="fas fa-chart-bar fa-3x text-primary mb-3"></i>
+                                            <h5>Custom Reports</h5>
+                                            <p class="text-muted">Create customized reports</p>
+                                            <button class="btn btn-outline-primary"><i class="fas fa-plus me-1"></i> Create Report</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">Recent Reports</div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Report Name</th>
+                                                    <th>Type</th>
+                                                    <th>Date Generated</th>
+                                                    <th>Size</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>Q3 2023 Dropout Analysis</td>
+                                                    <td><span class="badge bg-danger">PDF</span></td>
+                                                    <td>Oct 15, 2023</td>
+                                                    <td>2.4 MB</td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary"><i class="fas fa-download"></i></button>
+                                                        <button class="btn btn-sm btn-outline-info"><i class="fas fa-share"></i></button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Student Data Export</td>
+                                                    <td><span class="badge bg-success">CSV</span></td>
+                                                    <td>Oct 10, 2023</td>
+                                                    <td>1.7 MB</td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary"><i class="fas fa-download"></i></button>
+                                                        <button class="btn btn-sm btn-outline-info"><i class="fas fa-share"></i></button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Program Comparison</td>
+                                                    <td><span class="badge bg-primary">Custom</span></td>
+                                                    <td>Oct 5, 2023</td>
+                                                    <td>3.1 MB</td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary"><i class="fas fa-download"></i></button>
+                                                        <button class="btn btn-sm btn-outline-info"><i class="fas fa-share"></i></button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Settings Pane -->
+                        <div id="settings-pane" class="content-pane">
+                            <h4 class="mb-4">System Settings</h4>
+                            
+                            <div class="card mb-4">
+                                <div class="card-header">Account Settings</div>
+                                <div class="card-body">
+                                    <div class="settings-item">
+                                        <h5>Profile Information</h5>
+                                        <p class="text-muted">Update your account profile information</p>
+                                        <button class="btn btn-outline-primary">Edit Profile</button>
+                                    </div>
+                                    <div class="settings-item">
+                                        <h5>Change Password</h5>
+                                        <p class="text-muted">Ensure your account is using a secure password</p>
+                                        <button class="btn btn-outline-primary">Change Password</button>
+                                    </div>
+                                    <div class="settings-item">
+                                        <h5>Two-Factor Authentication</h5>
+                                        <p class="text-muted">Add additional security to your account</p>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="2faSwitch">
+                                            <label class="form-check-label" for="2faSwitch">Enable 2FA</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card mb-4">
+                                <div class="card-header">System Preferences</div>
+                                <div class="card-body">
+                                    <div class="settings-item">
+                                        <h5>Notification Settings</h5>
+                                        <p class="text-muted">Manage how you receive notifications</p>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="emailNotif" checked>
+                                            <label class="form-check-label" for="emailNotif">Email Notifications</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="browserNotif">
+                                            <label class="form-check-label" for="browserNotif">Browser Notifications</label>
+                                        </div>
+                                    </div>
+                                    <div class="settings-item">
+                                        <h5>Data Retention</h5>
+                                        <p class="text-muted">Manage how long data is stored in the system</p>
+                                        <select class="form-select">
+                                            <option>1 year</option>
+                                            <option selected>2 years</option>
+                                            <option>3 years</option>
+                                            <option>5 years</option>
+                                        </select>
+                                    </div>
+                                    <div class="settings-item">
+                                        <h5>Risk Threshold</h5>
+                                        <p class="text-muted">Set the threshold for student risk level calculation</p>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label for="highRisk" class="form-label">High Risk Threshold</label>
+                                                <input type="range" class="form-range" min="0" max="100" value="70" id="highRisk">
+                                                <div class="form-text">70% and above</div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label for="medRisk" class="form-label">Medium Risk Threshold</label>
+                                                <input type="range" class="form-range" min="0" max="100" value="40" id="medRisk">
+                                                <div class="form-text">40% to 69%</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulate login functionality
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            // Simple validation (in a real application, this would be more secure)
+            if (username && password) {
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('dashboard-screen').style.display = 'block';
+                initializeCharts();
+            }
+        });
+        
+        // Logout functionality
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            document.getElementById('auth-screen').style.display = 'block';
+            document.getElementById('dashboard-screen').style.display = 'none';
+        });
+        
+        // Navigation functionality
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all links
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                
+                // Add active class to clicked link
+                this.classList.add('active');
+                
+                // Hide all panes
+                document.querySelectorAll('.content-pane').forEach(pane => {
+                    pane.classList.remove('active');
+                });
+                
+                // Show the selected pane
+                const paneId = this.getAttribute('data-pane') + '-pane';
+                document.getElementById(paneId).classList.add('active');
+            });
+        });
+        
+        // Initialize charts
+        function initializeCharts() {
+            // Reasons Distribution Chart
+            const reasonsCtx = document.getElementById('reasonsChart').getContext('2d');
+            new Chart(reasonsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Financial', 'Academic', 'Personal', 'Other'],
+                    datasets: [{
+                        data: [45, 30, 15, 10],
+                        backgroundColor: [
+                            '#ffdddd',
+                            '#fff4dd',
+                            '#ddffdd',
+                            '#eeeeff'
+                        ],
+                        borderColor: [
+                            '#d00000',
+                            '#ff9500',
+                            '#007a00',
+                            '#0000cc'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+            // Trend Over Time Chart
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['2018', '2019', '2020', '2021', '2022', '2023'],
+                    datasets: [{
+                        label: 'Dropout Rate (%)',
+                        data: [18.5, 17.2, 19.8, 16.5, 15.2, 14.2],
+                        fill: false,
+                        backgroundColor: '#4361ee',
+                        borderColor: '#4361ee',
+                        tension: 0.1,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 10,
+                            title: {
+                                display: true,
+                                text: 'Dropout Rate (%)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Year'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Program Chart
+            const programCtx = document.getElementById('programChart').getContext('2d');
+            new Chart(programCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Computer Science', 'Business', 'Engineering', 'Arts & Humanities', 'Sciences', 'Education'],
+                    datasets: [{
+                        label: 'Dropout Rate (%)',
+                        data: [18.2, 12.5, 15.7, 9.3, 11.2, 7.8],
+                        backgroundColor: '#4361ee',
+                        borderColor: '#3f37c9',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Dropout Rate (%)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Intervention Chart
+            const interventionCtx = document.getElementById('interventionChart').getContext('2d');
+            new Chart(interventionCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Financial Aid', 'Tutoring', 'Counseling', 'Mentoring', 'Workshops'],
+                    datasets: [{
+                        label: 'Success Rate (%)',
+                        data: [72, 68, 65, 61, 58],
+                        backgroundColor: '#4cc9f0',
+                        borderColor: '#4895ef',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Success Rate (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
